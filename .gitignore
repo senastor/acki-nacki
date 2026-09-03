@@ -1,0 +1,18 @@
+# Secrets & credentials
+.env
+tokens.json
+datas.txt
+wallets.txt
+proxies.txt
+
+# Runtime state & logs
+.acki_trace
+*.log
+logs/
+
+# Dependencies
+node_modules/
+
+# OS junk
+.DS_Store
+Thumbs.db
