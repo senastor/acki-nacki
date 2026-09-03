@@ -10,6 +10,11 @@ proxies.txt
 *.log
 logs/
 
+# Upstream fork bundle (not part of this bot, kept locally only)
+meomundep.js
+configs.json
+package-lock.json
+
 # Dependencies
 node_modules/
 

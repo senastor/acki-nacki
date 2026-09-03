@@ -1,87 +1,59 @@
 @echo off
-title Acki Nacki Bot by @MeoMunDep
+title Acki-Nacki Auto Bot
 color 0A
-
-cd ..
-if exist node_modules (
-    echo Found node_modules in parent directory
-    cd %~dp0
-) else (
-    cd %~dp0
-    echo node_modules not found in parent directory
-)
 
 :MENU
 cls
-echo =================================================================
-echo    Acki Nacki BOT SETUP AND RUN SCRIPT by @MeoMunDep
-echo =================================================================
+echo ============================================================
+echo       Acki-Nacki Auto Bot - Setup and Run
+echo ============================================================
 echo.
 echo Current directory: %CD%
-echo Parent node_modules: %~dp0..\node_modules
 echo.
-echo 1. Install/Update Node.js Dependencies
-echo 2. Create/Edit Configuration Files
-echo 3. Run the Bot
-echo 4. Exit
+echo 1. Create/Check Config Files
+echo 2. Run the Bot
+echo 3. Exit
 echo.
-set /p choice="Enter your choice (1-4): "
+set /p choice="Enter choice (1-3): "
 
-if "%choice%"=="1" goto INSTALL
-if "%choice%"=="2" goto CONFIG
-if "%choice%"=="3" goto RUN
-if "%choice%"=="4" goto EXIT
-
-:INSTALL
-cls
-echo Checking node_modules location...
-if exist "..\node_modules" (
-    cd ..
-    echo Installing/Updating dependencies in parent directory...
-    npm install user-agents axios meo-forkcy-colors meo-forkcy-uitls meo-forkcy-logger meo-forkcy-proxy
-    cd %~dp0
-) else (
-    echo Installing dependencies in current directory...
-    npm install user-agents axios meo-forkcy-colors meo-forkcy-utils meo-forkcy-logger meo-forkcy-proxy
-)
-echo.
-echo Dependencies installation completed!
+if "%choice%"=="1" goto CONFIG
+if "%choice%"=="2" goto RUN
+if "%choice%"=="3" exit /b 0
+echo Invalid choice
 pause
 goto MENU
 
 :CONFIG
 cls
-echo Creating configuration files...
-
-
+if not exist .env (
+    copy .env.example .env >nul
+    echo Created .env from .env.example (edit with your TG bot token)
+)
 if not exist datas.txt (
     type nul > datas.txt
     echo Created datas.txt
 )
-
 if not exist proxies.txt (
     type nul > proxies.txt
     echo Created proxies.txt
 )
-
+if not exist wallets.txt (
+    type nul > wallets.txt
+    echo Created wallets.txt
+)
 echo.
-echo Configuration files have been created/checked.
-echo Please edit the files with your data before running the bot.
-echo.
+echo Config files ready. Please fill datas.txt with your session data.
 pause
 goto MENU
 
 :RUN
 cls
-echo Starting the bot...
-if exist "..\node_modules" (
-    echo Using node_modules from parent directory
-) else (
-    echo Using node_modules from current directory
+if not exist datas.txt (
+    echo datas.txt not found. Run option 1 first.
+    pause
+    goto MENU
 )
-node MeoMunDep
+echo Starting the bot...
+node bot.js
 pause
 goto MENU
-
-:EXIT
-exit

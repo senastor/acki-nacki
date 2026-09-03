@@ -1,11 +1,11 @@
 # Acki-Nacki Bot
 
-Auto bot for the Acki-Nacki Telegram mini app. Runs in a loop: refreshes sessions from `datas.txt`, renews tokens, and executes daily tasks for all accounts. Proven working in production (systemd, `Restart=always`).
+Auto bot for the Acki-Nacki Telegram mini app. One account, one session. It authenticates from `datas.txt`, keeps tokens fresh via auto-refresh, and loops farming + task claims around the clock. Proven in production under systemd (`Restart=always`).
 
 ## Requirements
 
 - Node.js 18+
-- Node standard library only (the bundle is self-contained; `npm install` is optional and only needed if you rebuild from the `meo-forkcy-*` sources)
+- No npm dependencies — the bot uses only the Node standard library.
 
 ## Quick Start
 
@@ -14,51 +14,37 @@ Auto bot for the Acki-Nacki Telegram mini app. Runs in a loop: refreshes session
 git clone https://github.com/senastor/acki-nacki.git
 cd acki-nacki
 
-# 2. Create your config files
-cp .env.example .env
-# edit .env with your Telegram bot token (optional, for notifications)
+# 2. Configure
+cp .env.example .env          # optional: Telegram bot token for notifications
+echo "eyJzZX..." > datas.txt  # your session data (the base64 after startapp=)
 
-# 3. Fill in account data
-echo "eyJzZX...base64-session-data" > datas.txt   # one session per line
-# optional: wallets.txt (one address per line)
-# optional: proxies.txt (one proxy per line, http/https/socks4/socks5)
-
-# 4. Run
+# 3. Run
 node bot.js
 ```
+
+Or use the interactive setup: `./setup.sh` (Linux/macOS) or `setup.bat` (Windows).
+
+## Getting Session Data
+
+1. Open Telegram → Acki Nacki bot → `/start`
+2. The bot gives a link like `https://t.ackinacki.com/?startapp=eyJ...`
+3. Copy the base64 part after `startapp=` into `datas.txt` (one session, overwrite)
 
 ## Files
 
 | File | Purpose | Tracked? |
 |------|---------|----------|
-| `bot.js` | Main entry — auth flow, token refresh, task loop, TG notifications | yes |
-| `meomundep.js` | Self-contained webpack bundle with core task logic | yes |
-| `configs.json` | Bot behavior config (proxy rotation, delays, batch size) | yes |
-| `.env` | Telegram bot token + chat id | **no** (see `.env.example`) |
-| `datas.txt` | Account session data (base64, one per line) | **no** |
+| `bot.js` | The bot — auth flow, token refresh, farming/claim loop, TG notifications | yes |
+| `.env` | Telegram bot token + chat id (optional) | **no** (see `.env.example`) |
+| `datas.txt` | Account session data (base64, one session) | **no** |
 | `tokens.json` | Cached access/refresh tokens (regenerated at runtime) | **no** |
-| `wallets.txt` | Wallet addresses | **no** |
-| `proxies.txt` | Proxy list | **no** |
+| `proxies.txt` | Proxy list (optional) | **no** |
+| `wallets.txt` | Wallet addresses (optional) | **no** |
 | `.acki_trace` | Runtime trace state | **no** |
 
-## Config (`configs.json`)
+## Telegram Notifications (optional)
 
-```json
-{
-  "rotateProxy": false,
-  "upgradeMamaboard": true,
-  "skipInvalidProxy": true,
-  "proxyRotationInterval": 2,
-  "delayEachAccount": [1, 1],
-  "timeToRestartAllAccounts": 300,
-  "howManyAccountsRunInOneTime": 10,
-  "doTasks": true
-}
-```
-
-- `delayEachAccount` — min/max seconds between accounts
-- `howManyAccountsRunInOneTime` — batch size before a full restart cycle
-- `timeToRestartAllAccounts` — seconds between restart cycles
+Set `tg_bot_token` and `tg_chat_id` in `.env` to get alerts on startup, claim success, and token-expiry warnings. Leave `.env` absent and the bot still runs — notifications just skip.
 
 ## Systemd (optional)
 
@@ -80,6 +66,13 @@ Environment=NODE_ENV=production
 WantedBy=multi-user.target
 ```
 
+## How It Works
+
+- **Auth:** `session_data` (base64) → `session_id` → `access_token` + `refresh_token`
+- **Auto-refresh:** proactively renews the access token before it expires; force-refresh on 401
+- **Loop:** checks farming status, claims when `claim_at` passes, starts the next farming cycle, sleeps ~1h between claims
+- **Persistence:** tokens cached in `tokens.json` so restarts don't need fresh session data
+
 ## Disclaimer
 
-Personal educational project, not affiliated with Acki-Nacki or its operators. Use at your own risk.
+Personal educational project, not affiliated with Acki-Nacki or its operators. Provided as-is, use at your own risk. Redistribution, resale, or commercial use is not permitted.
